@@ -425,6 +425,22 @@
     margin-top: 6px;
   }
 
+  #tooltip .games-scroll {
+    max-height: 180px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--purple) transparent;
+  }
+
+  #tooltip .games-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  #tooltip .games-scroll::-webkit-scrollbar-thumb {
+    background: var(--purple);
+    border-radius: 2px;
+  }
+
   /* Legend */
   .legend {
     display: flex;
@@ -680,9 +696,6 @@ function parseCSV(text) {
 
 // ─── Parse rows into Vikings games ───────────────────────────────────────────
 function rowsToGames(rows) {
-  // Support both nflverse column naming conventions
-  // nflverse-data/schedules: home_team, away_team, home_score, away_score, game_type, gameday, season
-  // nfldata/games: same schema
   const games = [];
   for (const row of rows) {
     const ht = (row.home_team || '').trim();
@@ -733,10 +746,8 @@ async function fetchWithTimeout(url, ms = 15000) {
 
 // ─── Main loader ──────────────────────────────────────────────────────────────
 async function loadData() {
-  // Clear old cache keys from previous versions
   ['vsg_data_v4','vsg_data_v5'].forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
 
-  // Check current cache
   try {
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
@@ -749,7 +760,6 @@ async function loadData() {
     }
   } catch(e) {}
 
-  // Load historical data (1961-1998) — always available as local file
   let historicalGames = [];
   try {
     setStatus('Loading historical data (1961–1998)...', 10);
@@ -761,7 +771,6 @@ async function loadData() {
     console.warn('Historical JSON load failed:', e.message);
   }
 
-  // Load modern data (1999–present) from nflverse
   let modernGames = [];
   let lastError = '';
 
@@ -791,14 +800,13 @@ async function loadData() {
         continue;
       }
 
-      break; // success
+      break;
 
     } catch(e) {
       lastError = `Source ${i+1} failed: ${e.message}`;
     }
   }
 
-  // Merge: historical first, then modern (modern wins on any season overlap)
   const modernSeasons = new Set(modernGames.map(g => g.season));
   const filteredHistorical = historicalGames.filter(g => !modernSeasons.has(g.season));
   const games = [...filteredHistorical, ...modernGames];
@@ -836,7 +844,6 @@ function setFilter(f) {
 
 // ─── Build Grid ───────────────────────────────────────────────────────────────
 function buildGrid(games) {
-  // Build score map: key = "vScore,oScore"
   const scoreMap = {};
   for (const g of games) {
     const key = `${g.vScore},${g.oScore}`;
@@ -844,7 +851,6 @@ function buildGrid(games) {
     scoreMap[key].push(g);
   }
 
-  // Find actual max scores to set bounds
   let maxV = 0, maxO = 0;
   for (const g of allGames) {
     if (g.vScore > maxV) maxV = g.vScore;
@@ -855,7 +861,6 @@ function buildGrid(games) {
   const rowsEl = document.getElementById('grid-rows');
   rowsEl.innerHTML = '';
 
-  // Rows = Vikings score (high to low on Y axis = top is high)
   for (let vs = maxScore; vs >= 0; vs--) {
     const row = document.createElement('div');
     row.className = 'grid-row';
@@ -882,7 +887,6 @@ function buildGrid(games) {
     rowsEl.appendChild(row);
   }
 
-  // X ticks
   const xTicksEl = document.getElementById('x-ticks');
   xTicksEl.innerHTML = '';
   const spacer = document.createElement('div');
@@ -910,16 +914,14 @@ function showTooltip(e, vs, os, games) {
   let html = `<div class="score-line">VIKINGS ${vs} — OPP ${os}</div>`;
   html += `<div class="count-line">${count} game${count !== 1 ? 's' : ''} · ${result === 'W' ? '<span style="color:#7bffa0">WIN</span>' : result === 'L' ? '<span style="color:#ff7b7b">LOSS</span>' : 'TIE'}</div>`;
 
-  const showGames = games.slice(0, 5);
-  for (const g of showGames) {
-    const where = g.home ? 'vs' : '@';
+  const gamesList = games.slice().sort((a, b) => a.date.localeCompare(b.date));
+  const gamesHtml = gamesList.map(g => {
+    const where = g.home ? 'vs' : g.neutral ? 'neutral' : '@';
     const typeStr = g.type === 3 ? ' 🏆' : '';
     const wl = g.vScore > g.oScore ? '<span class="result win">W</span>' : g.vScore < g.oScore ? '<span class="result loss">L</span>' : '<span class="result">T</span>';
-    html += `<div class="game-entry">${g.date.slice(0,4)} ${where} <span class="opp">${g.opp}</span>${typeStr} ${wl}</div>`;
-  }
-  if (games.length > 5) {
-    html += `<div class="more-games">+ ${games.length - 5} more game(s)</div>`;
-  }
+    return `<div class="game-entry">${g.date.slice(0,4)} ${where} <span class="opp">${g.opp}</span>${typeStr} ${wl}</div>`;
+  }).join('');
+  html += `<div class="games-scroll">${gamesHtml}</div>`;
 
   tip.innerHTML = html;
   tip.style.display = 'block';
@@ -982,7 +984,6 @@ let deferredInstallPrompt = null;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredInstallPrompt = e;
-  // Show banner only if not already installed and not dismissed
   if (!localStorage.getItem('pwa_install_dismissed')) {
     document.getElementById('install-banner').classList.add('visible');
   }
