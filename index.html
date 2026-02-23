@@ -914,7 +914,7 @@ function showTooltip(e, vs, os, games) {
   for (const g of showGames) {
     const where = g.home ? 'vs' : '@';
     const typeStr = g.type === 3 ? ' 🏆' : '';
-    const wl = g.win ? '<span class="result win">W</span>' : g.neutral ? '<span class="result">T</span>' : '<span class="result loss">L</span>';
+    const wl = g.vScore > g.oScore ? '<span class="result win">W</span>' : g.vScore < g.oScore ? '<span class="result loss">L</span>' : '<span class="result">T</span>';
     html += `<div class="game-entry">${g.date.slice(0,4)} ${where} <span class="opp">${g.opp}</span>${typeStr} ${wl}</div>`;
   }
   if (games.length > 5) {
@@ -949,8 +949,8 @@ function updateStats(games) {
   let wins = 0, losses = 0;
   for (const g of games) {
     scoreMap[`${g.vScore},${g.oScore}`] = true;
-    if (g.win) wins++;
-    else if (!g.neutral) losses++;
+    if (g.vScore > g.oScore) wins++;
+    else if (g.vScore < g.oScore) losses++;
   }
   document.getElementById('stat-games').textContent = games.length;
   document.getElementById('stat-unique').textContent = Object.keys(scoreMap).length;
