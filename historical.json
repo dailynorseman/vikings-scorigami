@@ -235,7 +235,7 @@
   {"season":1975,"date":"1975-12-07","vScore":23,"oScore":3,"opp":"GB","home":true,"win":true,"neutral":false,"type":2},
   {"season":1975,"date":"1975-12-14","vScore":10,"oScore":17,"opp":"DET","home":false,"win":false,"neutral":false,"type":2},
   {"season":1975,"date":"1975-12-20","vScore":35,"oScore":13,"opp":"BUF","home":false,"win":true,"neutral":false,"type":2},
-  {"season":1975,"date":"1975-12-28","vScore":17,"oScore":14,"opp":"DAL","home":true,"win":false,"neutral":false,"type":3},
+  {"season":1975,"date":"1975-12-28","vScore":14,"oScore":17,"opp":"DAL","home":true,"win":false,"neutral":false,"type":3},
 
   {"season":1976,"date":"1976-09-12","vScore":40,"oScore":9,"opp":"NO","home":false,"win":true,"neutral":false,"type":2},
   {"season":1976,"date":"1976-09-19","vScore":10,"oScore":10,"opp":"LAR","home":true,"win":false,"neutral":true,"type":2},
