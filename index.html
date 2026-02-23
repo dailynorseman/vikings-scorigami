@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Vikings Scorigami</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4F2683">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Skorigami">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+<!-- SEO / Social -->
+<meta name="description" content="Every unique final score in Minnesota Vikings history — an interactive Scorigami grid.">
+<meta property="og:title" content="Vikings Scorigami">
+<meta property="og:description" content="Every unique final score in Vikings history, visualized.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Viking:wght@400&family=Cinzel:wght@700;900&family=IBM+Plex+Mono:wght@400;600&family=Barlow+Condensed:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple: #4F2683;
+    --purple-dark: #2d1550;
+    --purple-mid: #3d1e6b;
+    --gold: #FFC62F;
+    --gold-dim: #c9962a;
+    --white: #f0e8ff;
+    --bg: #0e0618;
+    --bg2: #160b24;
+    --cell-empty: #1a0e2e;
+    --cell-1: #3d1e6b;
+    --cell-2: #5a2d8a;
+    --cell-3: #7b3ab0;
+    --cell-4: #9b4fd4;
+    --cell-5: #FFC62F;
+    --grid-gap: 2px;
+    --max-score: 60;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Barlow Condensed', sans-serif;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    overflow-x: hidden;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* PWA Install Banner */
+  #install-banner {
+    display: none;
+    background: linear-gradient(135deg, var(--purple) 0%, var(--purple-dark) 100%);
+    border-bottom: 2px solid var(--gold);
+    padding: 10px 16px;
+    text-align: center;
+    font-size: 13px;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.06em;
+    position: relative;
+  }
+  #install-banner.visible { display: block; }
+  #install-banner .banner-text { color: var(--white); }
+
+  #install-btn {
+    background: var(--gold);
+    color: var(--purple-dark);
+    border: none;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 2px;
+    cursor: pointer;
+    margin-left: 12px;
+    transition: opacity 0.15s;
+  }
+  #install-btn:hover { opacity: 0.85; }
+
+  #dismiss-banner {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: rgba(240,232,255,0.4);
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+  }
+
+  #offline-bar {
+    display: none;
+    background: #3a1a00;
+    border-bottom: 1px solid #ff7b7b;
+    padding: 6px 16px;
+    text-align: center;
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: #ff7b7b;
+    letter-spacing: 0.1em;
+  }
+  #offline-bar.visible { display: block; }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  header {
+    padding: 24px 24px 16px;
+    border-bottom: 2px solid var(--purple);
+    background: linear-gradient(180deg, var(--purple-dark) 0%, var(--bg) 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .title-block h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(22px, 4vw, 36px);
+    font-weight: 900;
+    color: var(--gold);
+    letter-spacing: 0.05em;
+    text-shadow: 0 0 40px rgba(255,198,47,0.4), 2px 2px 0 var(--purple-dark);
+    line-height: 1;
+  }
+
+  .title-block .subtitle {
+    font-size: 13px;
+    color: rgba(240,232,255,0.55);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-val {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .stat-lbl {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(240,232,255,0.45);
+    margin-top: 3px;
+  }
+
+  /* Main layout */
+  .main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+    align-items: center;
+  }
+
+  .filter-btn {
+    background: var(--purple-dark);
+    border: 1px solid var(--purple);
+    color: var(--white);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+  }
+
+  .filter-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .filter-btn.active {
+    background: var(--purple);
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .controls-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: rgba(240,232,255,0.4);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* Grid wrapper */
+  .grid-wrapper {
+    position: relative;
+    overflow: auto;
+    background: var(--bg2);
+    border: 1px solid var(--purple);
+    border-radius: 4px;
+    padding: 12px 12px 12px 12px;
+  }
+
+  .grid-outer {
+    display: flex;
+    gap: 0;
+  }
+
+  /* Y-axis label */
+  .y-axis-label {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: rgba(240,232,255,0.4);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-right: 6px;
+    white-space: nowrap;
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .grid-with-axes {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .axis-top {
+    display: flex;
+    margin-left: 28px;
+    margin-bottom: 3px;
+  }
+
+  .axis-label-container {
+    text-align: center;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: rgba(240,232,255,0.4);
+    font-family: 'IBM Plex Mono', monospace;
+    padding-bottom: 4px;
+  }
+
+  .grid-rows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--grid-gap);
+  }
+
+  .grid-row {
+    display: flex;
+    gap: var(--grid-gap);
+    align-items: center;
+  }
+
+  .row-label {
+    width: 24px;
+    min-width: 24px;
+    text-align: right;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: rgba(240,232,255,0.35);
+    padding-right: 4px;
+    line-height: 1;
+  }
+
+  .grid-cell {
+    width: 13px;
+    height: 13px;
+    min-width: 13px;
+    border-radius: 1px;
+    cursor: default;
+    transition: transform 0.1s, filter 0.1s;
+    position: relative;
+  }
+
+  .grid-cell.has-games {
+    cursor: pointer;
+  }
+
+  .grid-cell.has-games:hover {
+    transform: scale(1.6);
+    z-index: 10;
+    filter: brightness(1.3);
+  }
+
+  .grid-cell[data-count="0"] { background: var(--cell-empty); }
+  .grid-cell[data-count="1"] { background: var(--cell-1); }
+  .grid-cell[data-count="2"] { background: var(--cell-2); }
+  .grid-cell[data-count="3"] { background: var(--cell-3); }
+  .grid-cell[data-count="4"] { background: var(--cell-4); }
+  .grid-cell[data-count="5"], .grid-cell[data-count="6"], .grid-cell[data-count="7"],
+  .grid-cell[data-count="8"], .grid-cell[data-count="9"] { background: var(--cell-5); }
+
+  /* Gold glow on max freq cells */
+  .grid-cell.gold-cell {
+    box-shadow: 0 0 6px rgba(255,198,47,0.6);
+  }
+
+  /* X-axis tick labels */
+  .x-ticks {
+    display: flex;
+    margin-left: 28px;
+    margin-top: 4px;
+  }
+
+  .x-tick {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: rgba(240,232,255,0.35);
+    text-align: center;
+  }
+
+  /* Tooltip */
+  #tooltip {
+    position: fixed;
+    background: var(--purple-dark);
+    border: 1px solid var(--gold);
+    padding: 10px 14px;
+    font-size: 13px;
+    max-width: 260px;
+    pointer-events: none;
+    z-index: 9999;
+    border-radius: 3px;
+    display: none;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  }
+
+  #tooltip .score-line {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    color: var(--gold);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  #tooltip .count-line {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: rgba(240,232,255,0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(79,38,131,0.6);
+  }
+
+  #tooltip .game-entry {
+    font-size: 12px;
+    color: rgba(240,232,255,0.8);
+    line-height: 1.6;
+    margin-bottom: 2px;
+  }
+
+  #tooltip .game-entry .opp { color: var(--white); font-weight: 700; }
+  #tooltip .game-entry .result { font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+  #tooltip .game-entry .win { color: #7bffa0; }
+  #tooltip .game-entry .loss { color: #ff7b7b; }
+
+  #tooltip .more-games {
+    font-size: 11px;
+    color: var(--gold);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-top: 6px;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .legend-label {
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(240,232,255,0.4);
+  }
+
+  .legend-items {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+    display: inline-block;
+  }
+
+  .legend-text {
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: rgba(240,232,255,0.55);
+    margin-right: 8px;
+  }
+
+  /* Loading */
+  #loading {
+    text-align: center;
+    padding: 60px 20px;
+  }
+
+  .loader-title {
+    font-family: 'Cinzel', serif;
+    font-size: 20px;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+
+  .progress-bar-outer {
+    width: 280px;
+    margin: 0 auto 12px;
+    height: 6px;
+    background: var(--purple-dark);
+    border: 1px solid var(--purple);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-bar-inner {
+    height: 100%;
+    background: linear-gradient(90deg, var(--purple), var(--gold));
+    width: 0%;
+    transition: width 0.3s;
+    border-radius: 3px;
+  }
+
+  #loading-status {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: rgba(240,232,255,0.5);
+    letter-spacing: 0.12em;
+  }
+
+  /* Error */
+  #error-msg {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+    color: #ff7b7b;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+  }
+
+  /* Footer note */
+  .data-note {
+    margin-top: 16px;
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: rgba(240,232,255,0.3);
+    letter-spacing: 0.08em;
+  }
+
+  .data-note a {
+    color: var(--gold-dim);
+    text-decoration: none;
+  }
+
+  @media (max-width: 600px) {
+    .grid-cell {
+      width: 10px;
+      height: 10px;
+      min-width: 10px;
+    }
+    .row-label { font-size: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- PWA Install Banner (shown on Android/Chrome) -->
+<div id="install-banner">
+  <span class="banner-text">⚔ Add Vikings Scorigami to your home screen</span>
+  <button id="install-btn" onclick="triggerInstall()">Install</button>
+  <button id="dismiss-banner" onclick="dismissBanner()" title="Dismiss">✕</button>
+</div>
+
+<!-- Offline indicator -->
+<div id="offline-bar">⚡ YOU'RE OFFLINE — Showing cached data</div>
+
+<header>
+  <div class="header-inner">
+    <div class="title-block">
+      <h1>⚔ Vikings Scorigami</h1>
+      <div class="subtitle">Every Unique Final Score · 1961–Present</div>
+    </div>
+    <div class="stats-row" id="stats-row">
+      <div class="stat"><div class="stat-val" id="stat-games">—</div><div class="stat-lbl">Games</div></div>
+      <div class="stat"><div class="stat-val" id="stat-unique">—</div><div class="stat-lbl">Unique Scores</div></div>
+      <div class="stat"><div class="stat-val" id="stat-wins">—</div><div class="stat-lbl">Wins</div></div>
+      <div class="stat"><div class="stat-val" id="stat-losses">—</div><div class="stat-lbl">Losses</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+
+  <div id="loading">
+    <div class="loader-title">Loading Vikings Game History...</div>
+    <div class="progress-bar-outer"><div class="progress-bar-inner" id="progress-bar"></div></div>
+    <div id="loading-status">Fetching season data...</div>
+  </div>
+
+  <div id="error-msg"></div>
+
+  <div id="app" style="display:none">
+    <div class="controls">
+      <span class="controls-label">Show:</span>
+      <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All Games</button>
+      <button class="filter-btn" data-filter="wins" onclick="setFilter('wins')">Wins Only</button>
+      <button class="filter-btn" data-filter="losses" onclick="setFilter('losses')">Losses Only</button>
+      <button class="filter-btn" data-filter="reg" onclick="setFilter('reg')">Regular Season</button>
+      <button class="filter-btn" data-filter="post" onclick="setFilter('post')">Playoffs</button>
+    </div>
+
+    <div class="grid-wrapper">
+      <div class="grid-outer">
+        <div class="y-axis-label">Vikings Score →</div>
+        <div class="grid-with-axes">
+          <div class="axis-top">
+            <div class="axis-label-container" id="x-axis-title" style="flex:1;text-align:center;">← Opponent Score</div>
+          </div>
+          <div id="grid-rows" class="grid-rows"></div>
+          <div class="x-ticks" id="x-ticks"></div>
+        </div>
+      </div>
+      <div class="legend">
+        <span class="legend-label">Frequency:</span>
+        <div class="legend-items">
+          <span class="legend-swatch" style="background:#1a0e2e"></span><span class="legend-text">0</span>
+          <span class="legend-swatch" style="background:#3d1e6b"></span><span class="legend-text">1</span>
+          <span class="legend-swatch" style="background:#5a2d8a"></span><span class="legend-text">2</span>
+          <span class="legend-swatch" style="background:#7b3ab0"></span><span class="legend-text">3</span>
+          <span class="legend-swatch" style="background:#9b4fd4"></span><span class="legend-text">4</span>
+          <span class="legend-swatch" style="background:#FFC62F"></span><span class="legend-text">5+</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="data-note">Historical data (1961–1998) compiled manually. Modern data (1999–present) via <a href="https://github.com/nflverse/nfldata" target="_blank">nflverse</a>. Hover cells to see game details.</div>
+  </div>
+
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+// ─── Config ───────────────────────────────────────────────────────────────────
+const CACHE_KEY = 'vsg_data_v6';
+const CACHE_EXPIRY = 12 * 60 * 60 * 1000; // 12 hours
+const MAX_SCORE = 58;
+
+// Data sources to try in order
+const DATA_SOURCES = [
+  'https://github.com/nflverse/nflverse-data/releases/latest/download/schedules.csv',
+  'https://raw.githubusercontent.com/nflverse/nfldata/master/data/games.csv',
+  'https://corsproxy.io/?https://raw.githubusercontent.com/nflverse/nfldata/master/data/games.csv'
+];
+
+const HISTORICAL_JSON = './historical.json';
+
+// ─── Data Store ───────────────────────────────────────────────────────────────
+let allGames = [];
+let activeFilter = 'all';
+
+// ─── Status helpers ───────────────────────────────────────────────────────────
+function setStatus(msg, pct) {
+  const s = document.getElementById('loading-status');
+  const b = document.getElementById('progress-bar');
+  if (s) s.textContent = msg;
+  if (b && pct !== undefined) b.style.width = pct + '%';
+}
+
+function showLoadError(msg) {
+  document.getElementById('loading').style.display = 'none';
+  const e = document.getElementById('error-msg');
+  e.style.display = 'block';
+  e.innerHTML = `
+    <p style="color:#ff7b7b;font-size:15px;margin-bottom:12px;">⚠ Could not load game data</p>
+    <p style="font-size:12px;opacity:0.7;margin-bottom:16px;">${msg}</p>
+    <button onclick="localStorage.removeItem('${CACHE_KEY}');location.reload()"
+      style="background:#4F2683;border:1px solid #FFC62F;color:#FFC62F;
+             padding:8px 20px;cursor:pointer;font-family:inherit;font-size:13px;
+             letter-spacing:0.1em;text-transform:uppercase;">
+      Retry
+    </button>`;
+}
+
+// ─── CSV Parser ───────────────────────────────────────────────────────────────
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line.trim()) continue;
+    const vals = [];
+    let cur = '', inQ = false;
+    for (let j = 0; j < line.length; j++) {
+      const ch = line[j];
+      if (ch === '"') { inQ = !inQ; continue; }
+      if (ch === ',' && !inQ) { vals.push(cur); cur = ''; continue; }
+      cur += ch;
+    }
+    vals.push(cur);
+    const row = {};
+    headers.forEach((h, idx) => row[h] = (vals[idx] || '').trim());
+    rows.push(row);
+  }
+  return rows;
+}
+
+// ─── Parse rows into Vikings games ───────────────────────────────────────────
+function rowsToGames(rows) {
+  // Support both nflverse column naming conventions
+  // nflverse-data/schedules: home_team, away_team, home_score, away_score, game_type, gameday, season
+  // nfldata/games: same schema
+  const games = [];
+  for (const row of rows) {
+    const ht = (row.home_team || '').trim();
+    const at = (row.away_team || '').trim();
+    const isHome = ht === 'MIN';
+    const isAway = at === 'MIN';
+    if (!isHome && !isAway) continue;
+
+    const hs = parseInt(row.home_score);
+    const as_ = parseInt(row.away_score);
+    if (isNaN(hs) || isNaN(as_)) continue;
+
+    const vScore = isHome ? hs : as_;
+    const oScore = isHome ? as_ : hs;
+    const opp    = isHome ? at : ht;
+
+    const gtype = (row.game_type || '').trim().toUpperCase();
+    if (gtype === 'PRE') continue;
+
+    games.push({
+      season: parseInt(row.season) || 0,
+      type: gtype === 'REG' ? 2 : 3,
+      date: (row.gameday || row.game_date || '').slice(0, 10),
+      opp: opp || '?',
+      vScore,
+      oScore,
+      win: vScore > oScore,
+      neutral: vScore === oScore,
+      home: isHome
+    });
+  }
+  return games;
+}
+
+// ─── Fetch with timeout ───────────────────────────────────────────────────────
+async function fetchWithTimeout(url, ms = 15000) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(timer);
+    return res;
+  } catch(e) {
+    clearTimeout(timer);
+    throw e;
+  }
+}
+
+// ─── Main loader ──────────────────────────────────────────────────────────────
+async function loadData() {
+  // Clear old cache keys from previous versions
+  ['vsg_data_v4','vsg_data_v5'].forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
+
+  // Check current cache
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const { ts, games } = JSON.parse(cached);
+      if (Date.now() - ts < CACHE_EXPIRY && games && games.length > 50) {
+        allGames = games;
+        renderApp();
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // Load historical data (1961-1998) — always available as local file
+  let historicalGames = [];
+  try {
+    setStatus('Loading historical data (1961–1998)...', 10);
+    const hRes = await fetchWithTimeout(HISTORICAL_JSON, 10000);
+    if (hRes.ok) {
+      historicalGames = await hRes.json();
+    }
+  } catch(e) {
+    console.warn('Historical JSON load failed:', e.message);
+  }
+
+  // Load modern data (1999–present) from nflverse
+  let modernGames = [];
+  let lastError = '';
+
+  for (let i = 0; i < DATA_SOURCES.length; i++) {
+    const url = DATA_SOURCES[i];
+    setStatus(`Loading modern data (1999–present), source ${i + 1} of ${DATA_SOURCES.length}...`, 30 + i * 18);
+    try {
+      const res = await fetchWithTimeout(url, 20000);
+      if (!res.ok) { lastError = `HTTP ${res.status} from source ${i+1}`; continue; }
+
+      setStatus('Downloading game records...', 65);
+      const text = await res.text();
+
+      if (!text.includes('home_team') || !text.includes('away_team')) {
+        lastError = `Unexpected data format from source ${i+1}`;
+        continue;
+      }
+
+      setStatus('Parsing records...', 80);
+      const rows = parseCSV(text);
+
+      setStatus('Building grid...', 92);
+      modernGames = rowsToGames(rows);
+
+      if (modernGames.length < 10) {
+        lastError = `Too few games found (${modernGames.length}) from source ${i+1}`;
+        continue;
+      }
+
+      break; // success
+
+    } catch(e) {
+      lastError = `Source ${i+1} failed: ${e.message}`;
+    }
+  }
+
+  // Merge: historical first, then modern (modern wins on any season overlap)
+  const modernSeasons = new Set(modernGames.map(g => g.season));
+  const filteredHistorical = historicalGames.filter(g => !modernSeasons.has(g.season));
+  const games = [...filteredHistorical, ...modernGames];
+
+  if (games.length < 10) {
+    showLoadError(`${lastError}. Check your internet connection and try again.`);
+    return;
+  }
+
+  setStatus('Done!', 100);
+  allGames = games;
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), games }));
+  } catch(e) {}
+  renderApp();
+}
+
+// ─── Filter ───────────────────────────────────────────────────────────────────
+function getFilteredGames() {
+  return allGames.filter(g => {
+    if (activeFilter === 'wins') return g.win;
+    if (activeFilter === 'losses') return !g.win && !g.neutral;
+    if (activeFilter === 'reg') return g.type === 2;
+    if (activeFilter === 'post') return g.type === 3;
+    return true;
+  });
+}
+
+function setFilter(f) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
+  buildGrid(getFilteredGames());
+  updateStats(getFilteredGames());
+}
+
+// ─── Build Grid ───────────────────────────────────────────────────────────────
+function buildGrid(games) {
+  // Build score map: key = "vScore,oScore"
+  const scoreMap = {};
+  for (const g of games) {
+    const key = `${g.vScore},${g.oScore}`;
+    if (!scoreMap[key]) scoreMap[key] = [];
+    scoreMap[key].push(g);
+  }
+
+  // Find actual max scores to set bounds
+  let maxV = 0, maxO = 0;
+  for (const g of allGames) {
+    if (g.vScore > maxV) maxV = g.vScore;
+    if (g.oScore > maxO) maxO = g.oScore;
+  }
+  const maxScore = Math.max(maxV, maxO, MAX_SCORE);
+
+  const rowsEl = document.getElementById('grid-rows');
+  rowsEl.innerHTML = '';
+
+  // Rows = Vikings score (high to low on Y axis = top is high)
+  for (let vs = maxScore; vs >= 0; vs--) {
+    const row = document.createElement('div');
+    row.className = 'grid-row';
+
+    const lbl = document.createElement('div');
+    lbl.className = 'row-label';
+    lbl.textContent = vs % 5 === 0 ? vs : '';
+    row.appendChild(lbl);
+
+    for (let os = 0; os <= maxScore; os++) {
+      const key = `${vs},${os}`;
+      const count = (scoreMap[key] || []).length;
+      const cell = document.createElement('div');
+      cell.className = 'grid-cell' + (count > 0 ? ' has-games' : '') + (count >= 5 ? ' gold-cell' : '');
+      cell.dataset.count = Math.min(count, 9);
+      cell.title = '';
+      if (count > 0) {
+        cell.addEventListener('mouseenter', (e) => showTooltip(e, vs, os, scoreMap[key]));
+        cell.addEventListener('mouseleave', hideTooltip);
+        cell.addEventListener('mousemove', moveTooltip);
+      }
+      row.appendChild(cell);
+    }
+    rowsEl.appendChild(row);
+  }
+
+  // X ticks
+  const xTicksEl = document.getElementById('x-ticks');
+  xTicksEl.innerHTML = '';
+  const spacer = document.createElement('div');
+  spacer.style.width = '28px';
+  xTicksEl.appendChild(spacer);
+  for (let os = 0; os <= maxScore; os++) {
+    const tick = document.createElement('div');
+    tick.className = 'x-tick';
+    tick.style.width = '15px';
+    tick.style.minWidth = '15px';
+    tick.textContent = os % 10 === 0 ? os : '';
+    xTicksEl.appendChild(tick);
+  }
+}
+
+// ─── Tooltip ──────────────────────────────────────────────────────────────────
+let currentMouseX = 0, currentMouseY = 0;
+document.addEventListener('mousemove', e => { currentMouseX = e.clientX; currentMouseY = e.clientY; });
+
+function showTooltip(e, vs, os, games) {
+  const tip = document.getElementById('tooltip');
+  const result = vs > os ? 'W' : vs < os ? 'L' : 'T';
+  const count = games.length;
+
+  let html = `<div class="score-line">VIKINGS ${vs} — OPP ${os}</div>`;
+  html += `<div class="count-line">${count} game${count !== 1 ? 's' : ''} · ${result === 'W' ? '<span style="color:#7bffa0">WIN</span>' : result === 'L' ? '<span style="color:#ff7b7b">LOSS</span>' : 'TIE'}</div>`;
+
+  const showGames = games.slice(0, 5);
+  for (const g of showGames) {
+    const where = g.home ? 'vs' : '@';
+    const typeStr = g.type === 3 ? ' 🏆' : '';
+    const wl = g.win ? '<span class="result win">W</span>' : g.neutral ? '<span class="result">T</span>' : '<span class="result loss">L</span>';
+    html += `<div class="game-entry">${g.date.slice(0,4)} ${where} <span class="opp">${g.opp}</span>${typeStr} ${wl}</div>`;
+  }
+  if (games.length > 5) {
+    html += `<div class="more-games">+ ${games.length - 5} more game(s)</div>`;
+  }
+
+  tip.innerHTML = html;
+  tip.style.display = 'block';
+  positionTooltip();
+}
+
+function positionTooltip() {
+  const tip = document.getElementById('tooltip');
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let x = currentMouseX + 16;
+  let y = currentMouseY - 10;
+  if (x + 280 > vw) x = currentMouseX - 280 - 8;
+  if (y + tip.offsetHeight > vh) y = vh - tip.offsetHeight - 8;
+  tip.style.left = x + 'px';
+  tip.style.top = y + 'px';
+}
+
+function moveTooltip() { positionTooltip(); }
+
+function hideTooltip() {
+  document.getElementById('tooltip').style.display = 'none';
+}
+
+// ─── Stats ────────────────────────────────────────────────────────────────────
+function updateStats(games) {
+  const scoreMap = {};
+  let wins = 0, losses = 0;
+  for (const g of games) {
+    scoreMap[`${g.vScore},${g.oScore}`] = true;
+    if (g.win) wins++;
+    else if (!g.neutral) losses++;
+  }
+  document.getElementById('stat-games').textContent = games.length;
+  document.getElementById('stat-unique').textContent = Object.keys(scoreMap).length;
+  document.getElementById('stat-wins').textContent = wins;
+  document.getElementById('stat-losses').textContent = losses;
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+function renderApp() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  const games = getFilteredGames();
+  buildGrid(games);
+  updateStats(games);
+}
+
+// ─── PWA: Service Worker Registration ─────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.log('SW registration failed:', err));
+  });
+}
+
+// ─── PWA: Install Prompt (Android/Chrome) ──────────────────────────────────────
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  // Show banner only if not already installed and not dismissed
+  if (!localStorage.getItem('pwa_install_dismissed')) {
+    document.getElementById('install-banner').classList.add('visible');
+  }
+});
+
+function triggerInstall() {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.then(choice => {
+    if (choice.outcome === 'accepted') {
+      document.getElementById('install-banner').classList.remove('visible');
+    }
+    deferredInstallPrompt = null;
+  });
+}
+
+function dismissBanner() {
+  document.getElementById('install-banner').classList.remove('visible');
+  localStorage.setItem('pwa_install_dismissed', '1');
+}
+
+// ─── Offline detection ──────────────────────────────────────────────────────────
+function updateOnlineStatus() {
+  const bar = document.getElementById('offline-bar');
+  if (!navigator.onLine) {
+    bar.classList.add('visible');
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+// Start loading
+loadData().catch(err => {
+  showLoadError(err.message || String(err));
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "name": "Vikings Scorigami",
+  "short_name": "Skorigami",
+  "description": "Every unique final score in Minnesota Vikings history",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0e0618",
+  "theme_color": "#4F2683",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["sports", "utilities"],
+  "screenshots": [],
+  "lang": "en-US"
+}

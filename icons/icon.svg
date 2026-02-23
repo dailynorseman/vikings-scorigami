@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" fill="#2d1550"/>
+  <!-- Subtle grid pattern in background -->
+  <g opacity="0.12" stroke="#FFC62F" stroke-width="1" fill="none">
+    <line x1="64" y1="0" x2="64" y2="512"/>
+    <line x1="128" y1="0" x2="128" y2="512"/>
+    <line x1="192" y1="0" x2="192" y2="512"/>
+    <line x1="256" y1="0" x2="256" y2="512"/>
+    <line x1="320" y1="0" x2="320" y2="512"/>
+    <line x1="384" y1="0" x2="384" y2="512"/>
+    <line x1="448" y1="0" x2="448" y2="512"/>
+    <line x1="0" y1="64" x2="512" y2="64"/>
+    <line x1="0" y1="128" x2="512" y2="128"/>
+    <line x1="0" y1="192" x2="512" y2="192"/>
+    <line x1="0" y1="256" x2="512" y2="256"/>
+    <line x1="0" y1="320" x2="512" y2="320"/>
+    <line x1="0" y1="384" x2="512" y2="384"/>
+    <line x1="0" y1="448" x2="512" y2="448"/>
+  </g>
+  <!-- Viking horn silhouette -->
+  <g transform="translate(256,256)">
+    <!-- Main horn curve -->
+    <path d="M-110,-60 Q-80,-130 0,-120 Q80,-110 110,-40 Q130,20 100,80 Q70,130 20,130 Q-30,130 -60,90 Q-100,40 -110,-60 Z"
+          fill="#4F2683" stroke="#FFC62F" stroke-width="8"/>
+    <!-- Horn opening rim -->
+    <ellipse cx="100" cy="20" rx="28" ry="48" fill="#FFC62F" transform="rotate(-20)"/>
+    <ellipse cx="100" cy="20" rx="20" ry="38" fill="#2d1550" transform="rotate(-20)"/>
+    <!-- Decorative band on horn -->
+    <path d="M-70,-20 Q20,-80 90,-10" fill="none" stroke="#FFC62F" stroke-width="6" stroke-linecap="round" opacity="0.7"/>
+    <!-- Horn tip curl -->
+    <path d="M-80,80 Q-110,110 -90,140 Q-70,160 -50,145" fill="none" stroke="#FFC62F" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <!-- "VK" monogram at bottom -->
+  <text x="256" y="430" text-anchor="middle" font-family="serif" font-weight="900" font-size="64" fill="#FFC62F" letter-spacing="8">SKORI</text>
+  <!-- Gold bottom border accent -->
+  <rect x="60" y="470" width="392" height="6" rx="3" fill="#FFC62F" opacity="0.6"/>
+</svg>
