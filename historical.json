@@ -201,7 +201,7 @@
   {"season":1973,"date":"1973-12-16","vScore":31,"oScore":7,"opp":"NYG","home":false,"win":true,"neutral":false,"type":2},
   {"season":1973,"date":"1973-12-22","vScore":27,"oScore":20,"opp":"WAS","home":true,"win":true,"neutral":false,"type":3},
   {"season":1973,"date":"1973-12-30","vScore":27,"oScore":10,"opp":"DAL","home":false,"win":true,"neutral":false,"type":3},
-  {"season":1973,"date":"1974-01-13","vScore":7,"oScore":24,"opp":"MIA","home":false,"win":false,"neutral":true,"type":3},
+  {"season":1973,"date":"1974-01-13","vScore":7,"oScore":24,"opp":"MIA","home":false,"win":false,"neutral":false,"type":3},
 
   {"season":1974,"date":"1974-09-15","vScore":32,"oScore":17,"opp":"GB","home":false,"win":true,"neutral":false,"type":2},
   {"season":1974,"date":"1974-09-22","vScore":7,"oScore":6,"opp":"DET","home":false,"win":true,"neutral":false,"type":2},
