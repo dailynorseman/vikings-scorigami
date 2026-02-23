@@ -33,7 +33,7 @@
   {"season":1963,"date":"1963-09-22","vScore":7,"oScore":28,"opp":"CHI","home":true,"win":false,"neutral":false,"type":2},
   {"season":1963,"date":"1963-09-29","vScore":45,"oScore":14,"opp":"SF","home":true,"win":true,"neutral":false,"type":2},
   {"season":1963,"date":"1963-10-06","vScore":14,"oScore":56,"opp":"STL","home":true,"win":false,"neutral":false,"type":2},
-  {"season":1963,"date":"1963-10-13","vScore":38,"oScore":37,"opp":"GB","home":true,"win":false,"neutral":false,"type":2},
+  {"season":1963,"date":"1963-10-13","vScore":28,"oScore":37,"opp":"GB","home":true,"win":false,"neutral":false,"type":2},
   {"season":1963,"date":"1963-10-20","vScore":24,"oScore":27,"opp":"LAR","home":false,"win":false,"neutral":false,"type":2},
   {"season":1963,"date":"1963-10-27","vScore":10,"oScore":28,"opp":"DET","home":false,"win":false,"neutral":false,"type":2},
   {"season":1963,"date":"1963-11-03","vScore":21,"oScore":13,"opp":"LAR","home":true,"win":true,"neutral":false,"type":2},
